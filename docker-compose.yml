@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  ros2_web_gui:
+    build: .
+    container_name: ros2_vnc_container
+    ports:
+      - "6080:6080"    # noVNC
+      - "5901:5900"    # VNC
+    volumes:
+      - /shared/rc/vla:/workspace   # bind host folder to container
+    environment:
+      - DISPLAY=:1                 # ensure GUI uses correct display
+    tty: true
