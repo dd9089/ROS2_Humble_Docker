@@ -1,9 +1,9 @@
 # Base image
-FROM osrf/ros:humble-desktop-full
+FROM osrf/ros:jazzy-desktop-full
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV ROS_DISTRO=humble
+ENV ROS_DISTRO=jazzy
 ENV DISPLAY=:1
 
 # -----------------------------
@@ -18,22 +18,19 @@ RUN apt-get update && \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # -----------------------------
-# 2️⃣ Install ROS UR packages and Gazebo support
+# 2️⃣ Install ROS packages and Gazebo Harmonic support
 # -----------------------------
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        ros-${ROS_DISTRO}-ur-robot-driver \
-        ros-${ROS_DISTRO}-ur-msgs \
         ros-${ROS_DISTRO}-ros2-control \
         ros-${ROS_DISTRO}-ros2-controllers \
-        ros-${ROS_DISTRO}-gazebo-ros-pkgs \
-        ros-${ROS_DISTRO}-gazebo-ros2-control \
+        ros-${ROS_DISTRO}-gz-ros2-control \
         ros-${ROS_DISTRO}-moveit \
         ros-${ROS_DISTRO}-moveit-ros-planning \
         ros-${ROS_DISTRO}-moveit-ros-planning-interface \
         ros-${ROS_DISTRO}-moveit-ros-visualization \
         ros-${ROS_DISTRO}-moveit-ros-perception \
-        ros-${ROS_DISTRO}-ur-moveit-config \
+        ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # -----------------------------
@@ -47,7 +44,7 @@ RUN useradd -m -s /bin/bash ros-student && \
 # -----------------------------
 RUN mkdir -p /opt/novnc && \
     wget -qO- https://github.com/novnc/noVNC/archive/refs/tags/v1.4.0.tar.gz | tar xz -C /opt/novnc --strip-components=1 && \
-    pip3 install websockify
+    pip3 install websockify --break-system-packages
 
 # -----------------------------
 # 5️⃣ Set up VNC password
@@ -58,7 +55,7 @@ RUN mkdir -p /home/ros-student/.vnc && \
     chown -R ros-student:ros-student /home/ros-student/.vnc
 
 # -----------------------------
-# 6️⃣ Copy startup script (you provide this)
+# 6️⃣ Copy startup script
 # -----------------------------
 COPY ./startup.sh /home/ros-student/
 RUN chmod +x /home/ros-student/startup.sh && \
@@ -81,7 +78,8 @@ WORKDIR /home/ros-student
 # -----------------------------
 # 9️⃣ Configure ROS environment
 # -----------------------------
-RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc
+RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc && \
+    echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 
 # -----------------------------
 # 10️⃣ Expose VNC / noVNC ports
